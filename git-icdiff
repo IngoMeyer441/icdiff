@@ -10,7 +10,7 @@ if [ -z "$GITPAGER" ]; then
   GITPAGER="less"
 fi
 
-if [ "$GITPAGER" = "more" -o "$GITPAGER" = "less" ]; then
+if [ "$GITPAGER" = "more" ] || [ "$GITPAGER" = "less" ]; then
   GITPAGER="$GITPAGER -R"
 fi
 
