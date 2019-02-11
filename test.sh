@@ -32,6 +32,12 @@ fi
 PYTHON="$1"
 ICDIFF="icdiff"
 
+if [ ! -z "$INSTALLED" ]; then
+  INVOCATION="$ICDIFF"
+else
+  INVOCATION="$PYTHON $ICDIFF"
+fi
+
 function fail() {
   echo "FAIL"
   exit 1
@@ -47,11 +53,7 @@ function check_gold() {
 
   echo "    check_gold $gold matches $@"
   local tmp=/tmp/icdiff.output
-  if [ ! -z "$INSTALLED" ]; then
-    "$ICDIFF" "$@" &> $tmp
-  else
-    "$PYTHON" "$ICDIFF" "$@" &> $tmp
-  fi
+  $INVOCATION "$@" &> $tmp
 
   if $REGOLD; then
     if [ -e $gold ] && diff $tmp $gold > /dev/null; then
@@ -119,12 +121,14 @@ check_gold gold-subcolors-bad-cat tests/input-{1,2}.txt --cols=80 --color-map='c
 check_gold gold-subcolors-bad-fmt tests/input-{1,2}.txt --cols=80 --color-map='change:magenta:gold,description:cyan_bold'
 check_gold gold-bad-encoding.txt tests/input-{1,2}.txt --encoding=nonexistend_encoding
 
-
-if [ ! -z "$INSTALLED" ]; then
-  VERSION=$(icdiff --version | awk '{print $NF}')
-else
-  VERSION=$(./icdiff --version | awk '{print $NF}')
+# Testing pipe behavior doesn't fit well with the check_gold system
+$INVOCATION tests/input-{4,5}.txt 2>/tmp/icdiff-pipe-error-output | head -n 1
+if [ -s /tmp/icdiff-pipe-error-output ]; then
+  echo 'emitting errors on early pipe closure'
+  fail
 fi
+
+VERSION=$($INVOCATION --version | awk '{print $NF}')
 if [ "$VERSION" != $(head -n 1 ChangeLog) ]; then
   echo "Version mismatch between ChangeLog and icdiff source."
   fail
