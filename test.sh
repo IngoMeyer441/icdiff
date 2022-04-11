@@ -157,6 +157,21 @@ check_gold 2 gold-subcolors-bad-fmt tests/input-{1,2}.txt --cols=80 --color-map=
 check_gold 0 gold-identical-on.txt tests/input-{1,1}.txt -s
 check_gold 2 gold-bad-encoding.txt tests/input-{1,2}.txt --encoding=nonexistend_encoding
 
+rm tests/permissions-{a,b}
+touch tests/permissions-{a,b}
+check_gold 0 gold-permissions-same.txt tests/permissions-{a,b} -P --cols=80
+
+chmod 666 tests/permissions-a
+chmod 665 tests/permissions-b
+check_gold 1 gold-permissions-diff.txt tests/permissions-{a,b} -P --cols=80
+
+echo "some text" >> tests/permissions-a
+check_gold 1 gold-permissions-diff-text.txt tests/permissions-{a,b} -P --cols=80
+
+echo -e "\04" >> tests/permissions-b
+check_gold 1 gold-permissions-diff-binary.txt tests/permissions-{a,b} -P --cols=80
+rm tests/permissions-{a,b}
+
 if git show 4e86205629 &> /dev/null; then
   # We're in the repo, so test git.
   check_git_diff gitdiff-only-newlines.txt 4e86205629~1 4e86205629
@@ -177,15 +192,27 @@ if [ "$VERSION" != $(head -n 1 ChangeLog) ]; then
   fail
 fi
 
-if ! command -v 'flake8' >/dev/null 2>&1; then
-  echo 'Could not find flake8. Ensure flake8 is installed and on your $PATH.'
-  if [ -z "$VIRTUAL_ENV" ]; then
-    echo 'It appears you have have forgotten to activate your virtualenv.'
+function ensure_installed() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Could not find $1."
+    echo 'Ensure it is installed and on your $PATH.'
+    if [ -z "$VIRTUAL_ENV" ]; then
+      echo 'It appears you have have forgotten to activate your virtualenv.'
+    fi
+    echo 'See README.md for details on setting up your environment.'
+    fail
   fi
-  echo 'See README.md for details on setting up your environment.'
+}
+
+ensure_installed "black"
+echo 'Running black formatter...'
+if ! black icdiff --line-length 79 --check; then
+  echo ""
+  echo 'Consider running `black icdiff --line-length 79`'
   fail
 fi
 
+ensure_installed "flake8"
 echo 'Running flake8 linter...'
 if ! flake8 icdiff; then
   fail
