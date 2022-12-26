@@ -25,7 +25,7 @@ import unicodedata
 import codecs
 import fnmatch
 
-__version__ = "2.0.5"
+__version__ = "2.0.6"
 
 # Exit code constants
 EXIT_CODE_SUCCESS = 0
@@ -169,10 +169,10 @@ class ConsoleDiff(object):
     def _display_len(self, s):
         # Handle wide characters like Chinese.
         def width(c):
-            if (
-                isinstance(c, type(""))
-                and unicodedata.east_asian_width(c) in ["F", "W"]
-            ):
+            if isinstance(c, type("")) and unicodedata.east_asian_width(c) in [
+                "F",
+                "W",
+            ]:
                 return 2
             elif c == "\r":
                 return 2
@@ -940,7 +940,7 @@ def diff_files(options, a, b):
         ]
 
     # Determine if a difference has been detected
-    diff_found = len(lines_a) or len(lines_b) or not cmp_perms(options, a, b)
+    diff_found = lines_a != lines_b or not cmp_perms(options, a, b)
 
     if options.no_bold:
         for key in color_mapping:
