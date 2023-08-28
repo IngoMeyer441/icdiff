@@ -25,7 +25,7 @@ import unicodedata
 import codecs
 import fnmatch
 
-__version__ = "2.0.6"
+__version__ = "2.0.7"
 
 # Exit code constants
 EXIT_CODE_SUCCESS = 0
@@ -657,7 +657,7 @@ def create_option_parser():
         "--show-no-spaces",
         default=False,
         action="store_true",
-        help="don't color whitespace-only changes"
+        help="don't color whitespace-only changes",
     )
     parser.add_option("--tabsize", default=8, help="tab stop spacing")
     parser.add_option(
